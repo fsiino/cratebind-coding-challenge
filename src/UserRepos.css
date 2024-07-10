@@ -1,0 +1,65 @@
+table {
+  border-collapse: collapse;
+  margin: 25px 0;
+  font-size: 0.9em;
+  min-width: 400px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  width: 85vw;
+}
+
+td{
+  padding: 10px;
+}
+
+tr {
+  height: 40px;
+}
+
+tr:nth-child(even) {
+  background-color: rgb(50, 50, 50);
+}
+
+tr:nth-child(odd) {
+  background-color: rgb(25, 25, 25);
+}
+
+a {
+  color: orange;
+}
+
+.header {
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+.description {
+  text-align: left;
+}
+
+.message {
+  margin: 15px 0;
+}
+
+input[type="text"] {
+  line-height: 30px;
+  width: 300px;
+  margin: 0 15px;
+}
+
+button {
+  background-color: cyan;
+  font-weight: bold;
+  line-height: 30px;
+  font-size: 14px;
+  color: black;
+  border: none;
+}
+
+button:disabled {
+  background-color: gray;
+  text-decoration: line-through;
+}
+
+.logo {
+  width: 100px;
+}
