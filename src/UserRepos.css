@@ -46,7 +46,7 @@ input[type="text"] {
   margin: 0 15px;
 }
 
-button {
+.search-button {
   background-color: cyan;
   font-weight: bold;
   line-height: 30px;
@@ -55,11 +55,17 @@ button {
   border: none;
 }
 
-button:disabled {
+.search-button:disabled {
   background-color: gray;
   text-decoration: line-through;
 }
 
 .logo {
   width: 100px;
+}
+
+.page-button {
+  font-size: 1em;
+  background-color: cyan;
+  cursor: pointer;
 }

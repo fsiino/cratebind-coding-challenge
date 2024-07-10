@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import './UserRepos.css';
 
 const BASE_URL = "https://api.github.com/users/";
+// const TOKEN = "your_token_here";
 const HEADERS = {
-  "Content-Type": "application/json"
-}
+  "Content-Type": "application/json",
+  // Authorization: "Bearer " + TOKEN,
+};
 
 type Repo = {
   id: number;
@@ -23,6 +25,10 @@ function UserRepos() {
   const [loading, setLoading] = useState<boolean>(false);
   const [text, setText] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [firstPage, setFirstPage] = useState<string | null>(null);
+  const [prevPage, setPrevPage] = useState<string | null>(null);
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [lastPage, setLastPage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,27 +37,55 @@ function UserRepos() {
 
   const clearLastResult = (): void => {
     setRepos([]);
+    setFirstPage(null);
+    setPrevPage(null);
+    setNextPage(null);
+    setLastPage(null);
     setError(null);
   };
 
-  const getUserRepos = async (username: string) => {
+  const getUserRepos = async (url: string | null=BASE_URL + text + "/repos") => {
     setLoading(true);
     clearLastResult();
-    try {
-      const response = await fetch(BASE_URL + username + "/repos", {
-        headers: HEADERS,
-      });
-      const result = await response.json();
-      if (response.ok) {
-        const sorted = sortAndFilter(result);
-        setRepos(sorted);
-      } else {
-        setError("Error: " + result.status + " " + result.message);
+    if (url) {
+      try {
+        const response = await fetch(url, {
+          headers: HEADERS,
+        });
+        const result = await response.json();
+        if (response.ok) {
+          const linkHeader = response.headers.get('Link')
+          if (linkHeader) {
+            const parsedLinks = parseLinkHeader(linkHeader);
+            if (parsedLinks.first !== parsedLinks.last) {
+              setFirstPage(parsedLinks.first);
+              setPrevPage(parsedLinks.prev)
+              setNextPage(parsedLinks.next)
+              setLastPage(parsedLinks.last)
+            }
+          }
+          const sorted = sortAndFilter(result);
+          setRepos(sorted);
+        } else {
+          setError("Error: " + result.status + " " + result.message);
+        }
+      } catch (error) {
+        setError("Network error: " + error);
       }
-    } catch (error) {
-      setError("Network error: " + error);
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const parseLinkHeader = (header: string): { [key: string]: string } => {
+    const linkHeadersArray = header.split(", ");
+    const links: { [key: string]: string } = {};
+    linkHeadersArray.forEach((link) => {
+      const match = link.match(/<([^>]+)>;\s*rel="([^"]+)"/);
+      if (match && match[1] && match[2]) {
+        links[match[2]] = match[1];
+      }
+    });
+    return links;
   };
 
   const sortAndFilter = (repos: Repo[]): Repo[] => {
@@ -78,7 +112,7 @@ function UserRepos() {
     <>
       {Boolean(repos.length) && (
         <div className="message">
-          Found <b>{repos.length}</b> repositories totaling{" "}
+          Showing <b>{repos.length}</b> repositories totaling{" "}
           <b>{getTotalStars(repos)}</b> stars. (This does not include forks)
         </div>
       )}
@@ -120,34 +154,66 @@ function UserRepos() {
     </>
   );
 
-const handleOnSubmit = (): void => {
-  getUserRepos(text);
-};
+  const handleOnSubmit = (): void => {
+    getUserRepos();
+  };
 
   const searchFields: JSX.Element = (
+    <form onSubmit={handleOnSubmit}>
+      <input
+        type="text"
+        placeholder="Enter github username here"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        ref={inputRef}
+      />
+      <button className="search-button" disabled={!Boolean(text) || loading} type="submit">Search</button>
+    </form>
+  );
+
+  const pagination: JSX.Element = (
     <div>
-      <form onSubmit={handleOnSubmit}>
-        <input
-          type="text"
-          placeholder="Enter github username here"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          ref={inputRef}
-        />
-        <button disabled={!Boolean(text)} type="submit">Search</button>
-      </form>
+      {firstPage && <button
+        className="page-button"
+        onClick={() => getUserRepos(firstPage)}
+      >
+        {"<<"} First
+      </button>}
+      {prevPage && <button
+        className="page-button"
+        onClick={() => getUserRepos(prevPage)}
+      >
+        Prev
+      </button>}
+      {nextPage && <button
+        className="page-button"
+        onClick={() => getUserRepos(nextPage)}
+      >
+        Next
+      </button>}
+      {lastPage && <button
+        className="page-button"
+        onClick={() => getUserRepos(lastPage)}
+      >
+        Last {">>"}
+      </button>}
     </div>
   );
 
-  const renderContent = (): string | JSX.Element => {
+  const renderContent = (): JSX.Element => {
     if (loading) {
-      return "Loading...";
+      return <div>Loading...</div>;
     }
     return (
       <>
         {searchFields}
         {error}
-        {Boolean(repos.length) && repoList}
+        {Boolean(repos.length) && (
+          <>
+            {repoList}
+            {pagination}
+          </>
+        )}
       </>
     );
   };
