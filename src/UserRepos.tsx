@@ -18,8 +18,6 @@ type Repo = {
   fork: boolean;
 };
 
-const LOGO = <img alt="github logo" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" className="logo" />
-
 function UserRepos() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -64,13 +62,17 @@ function UserRepos() {
               setLastPage(parsedLinks.last)
             }
           }
-          const sorted = sortAndFilter(result);
-          setRepos(sorted);
+          if (Boolean(result.length)) {
+            const sorted = sortAndFilter(result);
+            setRepos(sorted);
+          } else {
+            setError(`User ${text} does not have any public repos.`)
+          }
         } else {
-          setError("Error: " + result.status + " " + result.message);
+          setError(`Error: ${result.status} ${result.message}`);
         }
       } catch (error) {
-        setError("Network error: " + error);
+        setError(`Network error: ${error}`);
       }
       setLoading(false);
     }
@@ -169,6 +171,14 @@ function UserRepos() {
       />
       <button className="search-button" disabled={!Boolean(text) || loading} type="submit">Search</button>
     </form>
+  );
+
+  const LOGO = (
+    <img
+      alt="github logo"
+      src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png"
+      className="logo"
+    />
   );
 
   const pagination: JSX.Element = (
