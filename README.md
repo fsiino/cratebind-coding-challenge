@@ -23,14 +23,16 @@ This uses the [Github REST API]("https://docs.github.com/en/rest?apiVersion=2022
 
 Each cycle through the pagination takes a separate API call, so it's easy to hit the limit by clicking through them too fast.
 
-To avoid getting rate limited, modify `UserRepos.tsx` to include a Bearer token in the Authorization header:
+To avoid getting rate limited, generate a personal access token here: https://github.com/settings/tokens
+
+Then modify lines 4-9 in `UserRepos.tsx` by uncommenting the necessary lines to include your Bearer token in the Authorization header:
 
 ```javascript
 const BASE_URL = "https://api.github.com/users/";
-const TOKEN = "your_token_here";        // <-- here
+// const TOKEN = "your_token_here";        // <-- here
 const HEADERS = {
   "Content-Type": "application/json",
-  Authorization: "Bearer " + TOKEN,    // <-- and here
+  // Authorization: "Bearer " + TOKEN,    // <-- and here
 };
 ```
 

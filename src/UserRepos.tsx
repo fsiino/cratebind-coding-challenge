@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import './UserRepos.css';
+import { useEffect, useRef, useState } from "react";
+import "./UserRepos.css";
 
 const BASE_URL = "https://api.github.com/users/";
 // const TOKEN = "your_token_here";
@@ -42,7 +42,9 @@ function UserRepos() {
     setError(null);
   };
 
-  const getUserRepos = async (url: string | null=BASE_URL + text + "/repos") => {
+  const getUserRepos = async (
+    url: string | null = BASE_URL + text + "/repos"
+  ) => {
     setLoading(true);
     clearLastResult();
     if (url) {
@@ -52,21 +54,29 @@ function UserRepos() {
         });
         const result = await response.json();
         if (response.ok) {
-          const linkHeader = response.headers.get('Link')
+          const linkHeader = response.headers.get("Link");
+          const rateHeaders = {
+            limit: response.headers.get("x-ratelimit-limit"),
+            remaining: response.headers.get("x-ratelimit-remaining"),
+            used: response.headers.get("x-ratelimit-used"),
+          }
+          console.log(
+            `Used ${rateHeaders.used} requests of ${rateHeaders.limit}. ${rateHeaders.remaining} remaining.`
+          );
           if (linkHeader) {
             const parsedLinks = parseLinkHeader(linkHeader);
             if (parsedLinks.first !== parsedLinks.last) {
               setFirstPage(parsedLinks.first);
-              setPrevPage(parsedLinks.prev)
-              setNextPage(parsedLinks.next)
-              setLastPage(parsedLinks.last)
+              setPrevPage(parsedLinks.prev);
+              setNextPage(parsedLinks.next);
+              setLastPage(parsedLinks.last);
             }
           }
           if (Boolean(result.length)) {
             const sorted = sortAndFilter(result);
             setRepos(sorted);
           } else {
-            setError(`User ${text} does not have any public repos.`)
+            setError(`User ${text} does not have any public repos.`);
           }
         } else {
           setError(`Error: ${result.status} ${result.message}`);
@@ -78,6 +88,11 @@ function UserRepos() {
     }
   };
 
+  /**
+   * Parses through the links in the response headers to store in state
+   * @param header
+   * @returns {object} Contains keys first, prev, next, and last and urls as the values
+   */
   const parseLinkHeader = (header: string): { [key: string]: string } => {
     const linkHeadersArray = header.split(", ");
     const links: { [key: string]: string } = {};
@@ -97,10 +112,15 @@ function UserRepos() {
   };
 
   const getTotalStars = (repos: Repo[]): number => {
-    return repos.reduce((acc, cur) => acc + cur.stargazers_count, 0)
+    return repos.reduce((acc, cur) => acc + cur.stargazers_count, 0);
   };
 
-  const displayStars = (starCount: number) => {
+  /**
+   * Displays a max of 5 stars for the repo name
+   * @param starCount
+   * @returns {string} a concatenated string of star emojis
+   */
+  const displayStars = (starCount: number): string => {
     let stars = "";
     let counter = starCount <= 5 ? starCount : 5;
     while (counter > 0) {
@@ -169,11 +189,17 @@ function UserRepos() {
         onChange={(e) => setText(e.target.value)}
         ref={inputRef}
       />
-      <button className="search-button" disabled={!Boolean(text) || loading} type="submit">Search</button>
+      <button
+        className="search-button"
+        disabled={!Boolean(text) || loading}
+        type="submit"
+      >
+        Search
+      </button>
     </form>
   );
 
-  const LOGO = (
+  const LOGO: JSX.Element = (
     <img
       alt="github logo"
       src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png"
@@ -183,30 +209,26 @@ function UserRepos() {
 
   const pagination: JSX.Element = (
     <div>
-      {firstPage && <button
-        className="page-button"
-        onClick={() => getUserRepos(firstPage)}
-      >
-        {"<<"} First
-      </button>}
-      {prevPage && <button
-        className="page-button"
-        onClick={() => getUserRepos(prevPage)}
-      >
-        Prev
-      </button>}
-      {nextPage && <button
-        className="page-button"
-        onClick={() => getUserRepos(nextPage)}
-      >
-        Next
-      </button>}
-      {lastPage && <button
-        className="page-button"
-        onClick={() => getUserRepos(lastPage)}
-      >
-        Last {">>"}
-      </button>}
+      {firstPage && (
+        <button className="page-button" onClick={() => getUserRepos(firstPage)}>
+          {"<<"} First
+        </button>
+      )}
+      {prevPage && (
+        <button className="page-button" onClick={() => getUserRepos(prevPage)}>
+          Prev
+        </button>
+      )}
+      {nextPage && (
+        <button className="page-button" onClick={() => getUserRepos(nextPage)}>
+          Next
+        </button>
+      )}
+      {lastPage && (
+        <button className="page-button" onClick={() => getUserRepos(lastPage)}>
+          Last {">>"}
+        </button>
+      )}
     </div>
   );
 
@@ -235,6 +257,6 @@ function UserRepos() {
       <div>{renderContent()}</div>
     </>
   );
-};
+}
 
 export default UserRepos;
